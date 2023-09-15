@@ -1,0 +1,122 @@
+service: users-microservice
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  versionFunctions: false
+  stage: "dev"
+  region: eu-central-1
+  httpApi:
+    cors: true
+  environment:
+    SNS_TOPIC: {Ref: CustomerTopic}
+    # SNS PERMISIONS
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        -  'sns:publish'
+      Resource:
+        -  !Ref CustomerTopic
+
+custom:
+  stage: "dev"
+  serverless-offline:
+    httpPort: 4000
+    lambdaPort: 4002
+
+
+functions:
+  signup:
+    handler: app/handler.Signup
+    events:
+      - httpApi:
+          path: /signup
+          method: post
+
+  login:
+    handler: app/handler.Login
+    events:
+      - httpApi:
+          path: /login
+          method: post
+
+  verify:
+    handler: app/handler.Verify
+    events:
+      - httpApi:
+          path: /verify
+          method: get
+      - httpApi:
+          path: /verify
+          method: post
+
+  profile:
+    handler: app/handler.Profile
+    events:
+      - httpApi:
+          path: /user
+          method: post
+      - httpApi:
+          path: /user
+          method: put
+      - httpApi:
+          path: /user
+          method: get
+
+  cart:
+    handler: app/handler.Cart
+    timeout: 15
+    events:
+      - httpApi:
+          path: /cart
+          method: post
+      - httpApi:
+          path: /cart/{id}
+          method: put
+      - httpApi:
+          path: /cart
+          method: get
+      - httpApi:
+          path: /cart/{id}
+          method: delete
+
+  orders:
+    handler: app/handler.CollectPayment
+    events:
+      - httpApi:
+          path: /order
+          method: post
+
+  payment:
+    handler: app/handler.Payment
+    events:
+      - httpApi:
+          path: /payment
+          method: post
+      - httpApi:
+          path: /payment
+          method: put
+      - httpApi:
+          path: /payment
+          method: get
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-typescript
+
+resource:
+    Resource:
+        CustomerTopic:
+            Type: AWS::SNS::Topic
+            Properties:
+                DisplayName: "Customer snsn Topic Description"
+                TopicName: 
+
+    #OUTPUT FOR LATER USAGE
+    Outputs:
+        CustomerTopicInfo:
+            Description: customer-topic
+            Value: !Ref CustomerTopic
+            Export:
+                Name: customer-topic
