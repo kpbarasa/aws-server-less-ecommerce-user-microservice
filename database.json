@@ -1,0 +1,9 @@
+{
+    "dev":{
+        "driver":"pg",
+        "user":"xzlkatew",
+        "password":"WKi3aCGlWb522ZRMj7X5pjR3PXfj47St",
+        "host":"berry.db.elephantsql.com",
+        "database":"xzlkatew"
+    }
+}

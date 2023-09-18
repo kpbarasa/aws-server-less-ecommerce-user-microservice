@@ -2,10 +2,14 @@ start_db:
     docker compose up -d
 
 stop_db:
-    docker compose 
+    docker compose down
 
 server:
     npm run dev
+
+migrate_new:
+    db-migrate create initialize --sql-file
+    
 migrate:
    db-migrate up
 

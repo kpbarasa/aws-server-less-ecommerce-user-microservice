@@ -10,6 +10,7 @@ export const GetSalt = async () => {
 };
 
 export const GetHashedPassword = async (password: string, salt: string) => {
+    
     return bcrypt.hashSync(password, salt);
 };
 
@@ -20,16 +21,11 @@ export const ValidatePassword = async (
     salt: string
 
 ) => {
-    console.log(
-        enteredPassword,
-        savedPassword,
-        salt
-    );
 
     return (await GetHashedPassword(enteredPassword, salt)) == savedPassword
 };
 
-export const GetToken = async ({ user_id, email, password, salt, phone, userType }: UserModel) => {
+export const GetToken = async ({ user_id, email, password, salt, phone, user_type }: UserModel) => {
     
     return jwt.sign({
         user_id,
@@ -37,7 +33,7 @@ export const GetToken = async ({ user_id, email, password, salt, phone, userType
         password,
         salt,
         phone,
-        userType
+        user_type
     }, APP_SECRET, { expiresIn: "60m" })
 };
 

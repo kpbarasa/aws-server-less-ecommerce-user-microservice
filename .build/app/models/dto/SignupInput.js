@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignupInput = void 0;
+exports.UserInputs = exports.SignupInput = void 0;
 const LoginInput_1 = require("./LoginInput");
 const class_validator_1 = require("class-validator");
 class SignupInput extends LoginInput_1.LoginInput {
@@ -19,4 +19,7 @@ __decorate([
     (0, class_validator_1.Length)(10, 13),
     __metadata("design:type", String)
 ], SignupInput.prototype, "phone", void 0);
+class UserInputs {
+}
+exports.UserInputs = UserInputs;
 //# sourceMappingURL=SignupInput.js.map

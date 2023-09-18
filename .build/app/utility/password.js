@@ -26,18 +26,17 @@ const GetHashedPassword = (password, salt) => __awaiter(void 0, void 0, void 0, 
 });
 exports.GetHashedPassword = GetHashedPassword;
 const ValidatePassword = (enteredPassword, savedPassword, salt) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(enteredPassword, savedPassword, salt);
     return (yield (0, exports.GetHashedPassword)(enteredPassword, salt)) == savedPassword;
 });
 exports.ValidatePassword = ValidatePassword;
-const GetToken = ({ user_id, email, password, salt, phone, userType }) => __awaiter(void 0, void 0, void 0, function* () {
+const GetToken = ({ user_id, email, password, salt, phone, user_type }) => __awaiter(void 0, void 0, void 0, function* () {
     return jsonwebtoken_1.default.sign({
         user_id,
         email,
         password,
         salt,
         phone,
-        userType
+        user_type
     }, APP_SECRET, { expiresIn: "60m" });
 });
 exports.GetToken = GetToken;

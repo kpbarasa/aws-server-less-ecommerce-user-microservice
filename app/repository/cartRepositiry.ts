@@ -13,14 +13,14 @@ export class CartRepository extends DBOperation {
         super()
     }
 
-    async findShoppingCart(user_id: number) {
+    async findShoppingCart(user_id: string) {
         const queryString = "SELECT cart_id, user_id FROM shopping_carts WHERE user_id=$1";
         const values = [user_id]
         const result = await this.executeQuery(queryString, values);
         return result.rowCount > 0 ? (result.rows[0] as ShoppingCartItemModel) : false;
     };
 
-    async createShoppingCart(user_id: number) {
+    async createShoppingCart(user_id: string) {
         const queryString = "INSERT  INTO shopping_carts(user_id) VALUES($1) RETURNING *";
         const values = [user_id]
         const result = await this.executeQuery(queryString, values);
@@ -48,7 +48,7 @@ export class CartRepository extends DBOperation {
         return result.rowCount > 0 ? (result.rows[0] as ShoppingCartItemModel) : false;
     };
 
-    async findCartItems(userId: number) {
+    async findCartItems(user_id: string) {
 
         const queryString = `SELECT 
         ci.cart_id, 
@@ -59,7 +59,7 @@ export class CartRepository extends DBOperation {
         ci.item_qty, 
         ci.image_url,
         ci.created_at FROM cart_items sc INNER JOIN shopping_carts ci ON sc.cart_id = ci.cart_id WHERE sc.user_id = $1`;
-        const values = [userId];
+        const values = [user_id];
         const result = await this.executeQuery(queryString, values);
         return result.rowCount > 0 ? (result.rows as ShoppingCartItemModel[]) : false;
 
@@ -120,7 +120,7 @@ export class CartRepository extends DBOperation {
 
     };
 
-    async deleteCartItem(id: number) {
+    async deleteCartItem(id: string) {
 
         const queryString = 'DELETE FROM cart_items WHERE item_id = $1';
         const values = [id];

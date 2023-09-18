@@ -28,8 +28,6 @@
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
-    "db-migrate": "^0.11.14",
-    "db-migrate-pg": "^1.5.2",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.13",
     "save-dev": "^0.0.1-security",
@@ -38,6 +36,11 @@
     "ts-node": "^10.9.1",
     "tsyringe": "^4.8.0",
     "twilio": "^4.17.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/pg": "^8.10.2"
   }
 }

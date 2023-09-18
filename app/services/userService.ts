@@ -49,13 +49,18 @@ export class UserService {
         Salt.toString()
       );
 
-      const data = await this.repository.CreateAccount(
-        input.email.toString(),
-        hashedPassword,
-        Salt.toString(),
-        input.phone,
-        "BUYER"
-      );
+      input.phone;
+      input.email.toString();
+      input.password = hashedPassword;
+      input.salt = Salt.toString();
+      input.user_type;
+      input.verification_code;
+      input.first_name;
+      input.last_name;
+      input.middle_name;
+      input.profile_pic;
+
+      const data = await this.repository.CreateAccount(input);
 
       return SusccessResponse(data);
     } catch (error) {
@@ -65,15 +70,10 @@ export class UserService {
 
   async LoginUser(event: APIGatewayProxyEventV2) {
     try {
-        
       const input = plainToClass(SignupInput, event.body);
 
       const error = await AppValidationError(input);
-
       if (error) return ErrorResponse(404, error);
-
-      // const Salt =  await GetSalt();
-      // const hashedPassword = await GetHashedPassword(input.password, Salt.toString());
 
       const data = await this.repository.FindAccount(input.email);
 
@@ -85,8 +85,9 @@ export class UserService {
 
       // Check / Validate user password
       if (!verified) {
-        throw new Error("Password does not match");
+        throw "Password does not match";
       }
+
       const token = await GetToken(data);
 
       return SusccessResponse({ token });
@@ -164,13 +165,24 @@ export class UserService {
       const payload = await verifyToken(token);
       if (!payload) return ErrorResponse(404, "Authorization failed");
 
+      const Salt = await GetSalt();
+
+      const hashedPassword = await GetHashedPassword(
+        input.password,
+        Salt.toString()
+      );
+
+      input.password = hashedPassword;
+
       // DB Operation
       const result = await this.repository.CreateProfile(
         payload.user_id,
         input
       );
+      
 
-      return SusccessResponse({ message: "Success User profile created" });
+      return SusccessResponse(result);
+
     } catch (error) {
       ErrorResponse(403, error);
     }
@@ -179,12 +191,15 @@ export class UserService {
   async GetProfile(event: APIGatewayProxyEventV2) {
     try {
       const token = event.headers.authorization;
+
       const payload = await verifyToken(token);
+
       if (!payload) return ErrorResponse(404, "Authorization failed");
 
       // DB Operation
       const result = await this.repository.GetProfile(payload.user_id);
       return SusccessResponse(result);
+      
     } catch (error) {
       ErrorResponse(403, error);
     }

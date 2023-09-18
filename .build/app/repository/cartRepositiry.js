@@ -58,7 +58,7 @@ class CartRepository extends dbOperations_1.DBOperation {
         });
     }
     ;
-    findCartItems(userId) {
+    findCartItems(user_id) {
         return __awaiter(this, void 0, void 0, function* () {
             const queryString = `SELECT 
         ci.cart_id, 
@@ -69,7 +69,7 @@ class CartRepository extends dbOperations_1.DBOperation {
         ci.item_qty, 
         ci.image_url,
         ci.created_at FROM cart_items sc INNER JOIN shopping_carts ci ON sc.cart_id = ci.cart_id WHERE sc.user_id = $1`;
-            const values = [userId];
+            const values = [user_id];
             const result = yield this.executeQuery(queryString, values);
             return result.rowCount > 0 ? result.rows : false;
         });

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProfileInput = exports.AddressInput = void 0;
+exports.ProfileInput = exports.ShippingAddressInput = exports.BillingAddressInput = exports.AddressInput = void 0;
 const class_validator_1 = require("class-validator");
 class AddressInput {
 }
@@ -23,26 +23,88 @@ __decorate([
     __metadata("design:type", String)
 ], AddressInput.prototype, "city", void 0);
 __decorate([
+    (0, class_validator_1.Length)(3, 50),
+    __metadata("design:type", String)
+], AddressInput.prototype, "state", void 0);
+__decorate([
     (0, class_validator_1.Length)(4, 6),
     __metadata("design:type", String)
-], AddressInput.prototype, "postCode", void 0);
+], AddressInput.prototype, "post_code", void 0);
 __decorate([
     (0, class_validator_1.Length)(2, 3),
     __metadata("design:type", String)
 ], AddressInput.prototype, "country", void 0);
+class BillingAddressInput {
+}
+exports.BillingAddressInput = BillingAddressInput;
+__decorate([
+    (0, class_validator_1.Length)(3, 32),
+    __metadata("design:type", String)
+], BillingAddressInput.prototype, "addressLine1", void 0);
+__decorate([
+    (0, class_validator_1.Length)(3, 50),
+    __metadata("design:type", String)
+], BillingAddressInput.prototype, "city", void 0);
+__decorate([
+    (0, class_validator_1.Length)(3, 50),
+    __metadata("design:type", String)
+], BillingAddressInput.prototype, "state", void 0);
+__decorate([
+    (0, class_validator_1.Length)(4, 6),
+    __metadata("design:type", String)
+], BillingAddressInput.prototype, "post_code", void 0);
+__decorate([
+    (0, class_validator_1.Length)(2, 3),
+    __metadata("design:type", String)
+], BillingAddressInput.prototype, "country", void 0);
+class ShippingAddressInput {
+}
+exports.ShippingAddressInput = ShippingAddressInput;
+__decorate([
+    (0, class_validator_1.Length)(3, 32),
+    __metadata("design:type", String)
+], ShippingAddressInput.prototype, "addressLine1", void 0);
+__decorate([
+    (0, class_validator_1.Length)(3, 50),
+    __metadata("design:type", String)
+], ShippingAddressInput.prototype, "city", void 0);
+__decorate([
+    (0, class_validator_1.Length)(3, 50),
+    __metadata("design:type", String)
+], ShippingAddressInput.prototype, "state", void 0);
+__decorate([
+    (0, class_validator_1.Length)(4, 6),
+    __metadata("design:type", String)
+], ShippingAddressInput.prototype, "post_code", void 0);
+__decorate([
+    (0, class_validator_1.Length)(2, 3),
+    __metadata("design:type", String)
+], ShippingAddressInput.prototype, "country", void 0);
 class ProfileInput {
 }
 exports.ProfileInput = ProfileInput;
 __decorate([
     (0, class_validator_1.Length)(3, 32),
     __metadata("design:type", String)
-], ProfileInput.prototype, "firstName", void 0);
+], ProfileInput.prototype, "first_name", void 0);
 __decorate([
     (0, class_validator_1.Length)(3, 32),
     __metadata("design:type", String)
-], ProfileInput.prototype, "lastName", void 0);
+], ProfileInput.prototype, "last_name", void 0);
 __decorate([
-    (0, class_validator_1.Length)(5, 13),
+    (0, class_validator_1.Length)(2, 32),
     __metadata("design:type", String)
-], ProfileInput.prototype, "userType", void 0);
+], ProfileInput.prototype, "middle_name", void 0);
+__decorate([
+    (0, class_validator_1.Length)(10, 20),
+    __metadata("design:type", String)
+], ProfileInput.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.Length)(8, 50),
+    __metadata("design:type", String)
+], ProfileInput.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.Length)(8, 16),
+    __metadata("design:type", String)
+], ProfileInput.prototype, "password", void 0);
 //# sourceMappingURL=AddressInput.js.map

@@ -9,10 +9,10 @@ const DBClient = () => {
         // database: "user_service",
         // password: "user_service_2023",
         // port: 5432
-        host: "isilo.db.elephantsql.com",
-        user: "fwtdhqnb",
-        database: "fwtdhqnb",
-        password: "XjtiKjNatd575aJZGP7C4j0jXE_3TWcg",
+        host: "berry.db.elephantsql.com",
+        user: "xzlkatew",
+        database: "xzlkatew",
+        password: "WKi3aCGlWb522ZRMj7X5pjR3PXfj47St",
         port: 5432
     });
 };

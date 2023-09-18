@@ -50,17 +50,7 @@ let UserService = class UserService {
                     return (0, response_1.ErrorResponse)(404, error);
                 const Salt = yield (0, password_1.GetSalt)();
                 const hashedPassword = yield (0, password_1.GetHashedPassword)(input.password, Salt.toString());
-                input.phone;
-                input.email.toString();
-                input.password = hashedPassword;
-                input.salt = Salt.toString();
-                input.user_type;
-                input.verification_code;
-                input.first_name;
-                input.last_name;
-                input.middle_name;
-                input.profile_pic;
-                const data = yield this.repository.CreateAccount(input);
+                const data = yield this.repository.CreateAccount(input.email.toString(), hashedPassword, Salt.toString(), input.phone, "CLIENT_CUSTOMER");
                 return (0, response_1.SusccessResponse)(data);
             }
             catch (error) {
@@ -75,11 +65,13 @@ let UserService = class UserService {
                 const error = yield (0, errors_1.AppValidationError)(input);
                 if (error)
                     return (0, response_1.ErrorResponse)(404, error);
+                // const Salt =  await GetSalt();
+                // const hashedPassword = await GetHashedPassword(input.password, Salt.toString());
                 const data = yield this.repository.FindAccount(input.email);
                 const verified = yield (0, password_1.ValidatePassword)(input.password, data.password, data.salt);
                 // Check / Validate user password
                 if (!verified) {
-                    throw "Password does not match";
+                    throw new Error("Password does not match");
                 }
                 const token = yield (0, password_1.GetToken)(data);
                 return (0, response_1.SusccessResponse)({ token });
@@ -145,12 +137,9 @@ let UserService = class UserService {
                 const payload = yield (0, password_1.verifyToken)(token);
                 if (!payload)
                     return (0, response_1.ErrorResponse)(404, "Authorization failed");
-                const Salt = yield (0, password_1.GetSalt)();
-                const hashedPassword = yield (0, password_1.GetHashedPassword)(input.password, Salt.toString());
-                input.password = hashedPassword;
                 // DB Operation
                 const result = yield this.repository.CreateProfile(payload.user_id, input);
-                return (0, response_1.SusccessResponse)(result);
+                return (0, response_1.SusccessResponse)({ message: "Success User profile created" });
             }
             catch (error) {
                 (0, response_1.ErrorResponse)(403, error);
@@ -212,4 +201,4 @@ exports.UserService = UserService = __decorate([
     (0, tsyringe_1.autoInjectable)(),
     __metadata("design:paramtypes", [userRepositiry_1.UserRepository])
 ], UserService);
-//# sourceMappingURL=userService.js.map
+//# sourceMappingURL=UserService.1.js.map
