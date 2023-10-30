@@ -16,9 +16,7 @@ exports.PullData = void 0;
 const axios_1 = __importDefault(require("axios"));
 const PRODUCT_SERVICE_URL = "http://127.0.0.1:3000/products-queue";
 const PullData = (requestData) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log({ requestData });
     const response = yield axios_1.default.post(PRODUCT_SERVICE_URL, requestData);
-    console.log({ response });
     return { data: response.data, status: 200 };
 });
 exports.PullData = PullData;

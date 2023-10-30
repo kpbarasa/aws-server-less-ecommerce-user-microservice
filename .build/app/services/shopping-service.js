@@ -14,10 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShoppingService = void 0;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
-const line_items_input_1 = require("app/models/dto/line-items-input");
-const errors_1 = require("app/utility/errors");
-const password_1 = require("app/utility/password");
-const response_1 = require("app/utility/response");
+const line_items_input_1 = require("../models/dto/line-items-input");
+const errors_1 = require("../utility/errors");
+const password_1 = require("../utility/password");
+const response_1 = require("../utility/response");
 const class_transformer_1 = require("class-transformer");
 class ShoppingService {
     constructor(repository) {
@@ -25,10 +25,13 @@ class ShoppingService {
     }
     ResonseWithError(event) {
         return __awaiter(this, void 0, void 0, function* () {
+            // ERORROR RESPONSE HERE
             return (0, response_1.ErrorResponse)(404, "request method is not supported !");
         });
     }
-    ;
+    // ===================================================================
+    // CHECH OUT
+    // ===================================================================
     checkout(event) {
         return __awaiter(this, void 0, void 0, function* () {
             const token = event.headers.authorization;
@@ -41,7 +44,7 @@ class ShoppingService {
             const error = yield (0, errors_1.AppValidationError)(input);
             if (error)
                 return (0, response_1.ErrorResponse)(404, error);
-            // Get cart items 
+            // Get cart items
             // Get cart total
             // Get cart tax
             // Initialize Payment Gateway

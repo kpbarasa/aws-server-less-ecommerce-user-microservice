@@ -1,13 +1,13 @@
 CREATE TABLE "address"(
-    "id" bigserial  PRIMARY KEY,
+    "address_id" varchar PRIMARY KEY,
     "user_id" varchar UNIQUE NULL,
-    "address_line1" text,
-    "address_line2" text,
-    "city" varchar,
-    "state" varchar,
-    "post_code" integer,
-    "country" varchar,
-    "created_at" varchar NOT NULL DEFAULT (now())
+    "address_line1" varchar NOT NULL,
+    "address_line2" varchar NOT NULL,
+    "city" varchar NOT NULL,
+    "state" varchar NULL,
+    "post_code" varchar NOT NULL,
+    "country" varchar NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT(now())
 );
 
 CREATE INDEX ON "address" ("city");
@@ -18,10 +18,8 @@ CREATE INDEX ON "address" ("country");
 -- Add relation 
 ALTER TABLE "address" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id");
 
-
-
 CREATE TABLE "shipping_address"(
-    "id" bigserial  PRIMARY KEY,
+    "address_id" varchar  PRIMARY KEY,
     "user_id" varchar UNIQUE NULL,
     "address_line1" text,
     "address_line2" text,
@@ -40,7 +38,7 @@ CREATE INDEX ON "shipping_address" ("country");
 ALTER TABLE "shipping_address" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id");
 
 CREATE TABLE "billing_address"(
-    "id" bigserial  PRIMARY KEY,
+    "address_id" varchar  PRIMARY KEY,
     "user_id" varchar UNIQUE NULL,
     "address_line1" text,
     "address_line2" text,
@@ -48,7 +46,7 @@ CREATE TABLE "billing_address"(
     "state" varchar,
     "post_code" integer,
     "country" varchar,
-    "created_at" varchar NOT NULL DEFAULT (now())
+    "created_at" varchar DEFAULT (now())
 );
 
 CREATE INDEX ON "billing_address" ("city");

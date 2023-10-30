@@ -21,13 +21,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const tsyringe_1 = require("tsyringe");
 const class_transformer_1 = require("class-transformer");
-const userRepositiry_1 = require("../repository/userRepositiry");
 const SignupInput_1 = require("../models/dto/SignupInput");
 const AddressInput_1 = require("../models/dto/AddressInput");
 const UpdateInput_1 = require("../models/dto/UpdateInput");
-const dateHelper_1 = require("../utility/dateHelper");
-const errors_1 = require("../utility/errors");
 const response_1 = require("../utility/response");
+const userRepositiry_1 = require("../repository/userRepositiry");
+const errors_1 = require("../utility/errors");
+const dateHelper_1 = require("../utility/dateHelper");
 const notification_1 = require("../utility/notification");
 const password_1 = require("../utility/password");
 let UserService = class UserService {
@@ -40,10 +40,21 @@ let UserService = class UserService {
             return (0, response_1.ErrorResponse)(404, "request method is not supported !");
         });
     }
+    // ===================================================================
     // USER PROFILE
+    // Validate users
+    // DB PROCESS: DELETE cart by Cart ID
+    // CHECK IF USER SHOPPING CART EXISTS
+    // DB OPERATION: Find shopping cart
+    // CHECK IF USER SHOPPING CART ITEM EXISTS
+    // DB OPERATION: Find shopping cart item
+    // ===================================================================
     CreateUser(event) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // ===================================================================
+                // Validate users
+                // ===================================================================
                 const input = (0, class_transformer_1.plainToClass)(SignupInput_1.SignupInput, event.body);
                 const error = yield (0, errors_1.AppValidationError)(input);
                 if (error)
@@ -60,51 +71,90 @@ let UserService = class UserService {
                 input.last_name;
                 input.middle_name;
                 input.profile_pic;
-                const data = yield this.repository.CreateAccount(input);
-                return (0, response_1.SusccessResponse)(data);
+                // ===================================================================
+                // DB OPERATION: Find shopping cart item
+                // ===================================================================
+                const result = yield this.repository.CreateAccount(input);
+                if (result) {
+                    return (0, response_1.SusccessResponse)(result);
+                }
+                else {
+                    throw new Error("Sorry register user.");
+                }
             }
             catch (error) {
-                (0, response_1.ErrorResponse)(500, error);
+                return (0, response_1.ErrorResponse)(500, error);
             }
         });
     }
+    // ===================================================================
+    // USER PROFILE
+    // Validate users
+    // DB OPERATION: Find user account
+    // Validate passwords
+    // Create token
+    // ===================================================================
     LoginUser(event) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // ===================================================================
+                // Validate users
+                // ===================================================================
                 const input = (0, class_transformer_1.plainToClass)(SignupInput_1.SignupInput, event.body);
                 const error = yield (0, errors_1.AppValidationError)(input);
                 if (error)
                     return (0, response_1.ErrorResponse)(404, error);
                 const data = yield this.repository.FindAccount(input.email);
+                // ===================================================================
+                // Validate passwords
+                // ===================================================================
                 const verified = yield (0, password_1.ValidatePassword)(input.password, data.password, data.salt);
-                // Check / Validate user password
                 if (!verified) {
-                    throw "Password does not match";
+                    throw new Error("Password does not match");
                 }
+                // ===================================================================
+                // Create token
+                // ===================================================================
                 const token = yield (0, password_1.GetToken)(data);
-                return (0, response_1.SusccessResponse)({ token });
+                if (token) {
+                    return (0, response_1.SusccessResponse)({ token });
+                }
+                else {
+                    throw new Error("Password does not match");
+                }
             }
             catch (error) {
-                (0, response_1.ErrorResponse)(500, error);
+                return (0, response_1.ErrorResponse)(500, error);
             }
         });
     }
-    // USER AUTHENTICATION
+    // ===================================================================
+    // VERIFY TOKEN
+    // DB OPERATION: Save  confirm verification to DB
+    // Validate passwords
+    // Create token
+    // ===================================================================
     GetVerificationToken(event) {
         return __awaiter(this, void 0, void 0, function* () {
             const token = event.headers.authorization;
             const payload = yield (0, password_1.verifyToken)(token);
             if (payload) {
                 const { code, expiry } = (0, notification_1.GenerateAccessCode)();
-                // Save on DB  to confirm verification.
+                // ===================================================================
+                // DB OPERATION: Save  confirm verification to DB
+                // ===================================================================
                 yield this.repository.UpdateVerificationCode(payload.user_id, code, expiry);
-                // const response = await SendVerificationCode(code, payload.phone)
                 return (0, response_1.SusccessResponse)({
                     message: "verification code is sent to your registered mobile number!",
                 });
             }
         });
     }
+    // ===================================================================
+    // VERIFY USER
+    // DB OPERATION: Find user account: verification_code, expiry_date
+    // Verify user
+    // ===================================================================
     VerifyUser(event) {
         return __awaiter(this, void 0, void 0, function* () {
             const token = event.headers.authorization;
@@ -115,12 +165,16 @@ let UserService = class UserService {
             const error = yield (0, errors_1.AppValidationError)(input);
             if (error)
                 return (0, response_1.ErrorResponse)(404, error);
+            // ===================================================================
+            // DB OPERATION: Find user account: verification_code, expiry_date
+            // ===================================================================
             const { verification_code, expiry_date } = yield this.repository.FindAccount(payload.email.toString());
-            // Find user Account
             if (verification_code.toString() === input.code) {
-                // Check expiry date
                 const currentTime = new Date();
                 const diff = (0, dateHelper_1.TimeDifference)(expiry_date, currentTime.toISOString(), "m");
+                // ===================================================================
+                // Verify user
+                // ===================================================================
                 if (diff > 0) {
                     yield this.repository.UpdateVerifyUser(payload.user_id);
                     return (0, response_1.SusccessResponse)({ message: "user verified !" });
@@ -128,15 +182,21 @@ let UserService = class UserService {
                 else {
                     return (0, response_1.ErrorResponse)(403, "verification code expired !");
                 }
-                // Update DB
             }
             return (0, response_1.SusccessResponse)({ message: "user verified !" });
         });
     }
+    // ===================================================================
     // USER PROFILE
+    // Verify inputs
+    // DB OPERATION: Create profile
+    // ===================================================================
     CreateProfile(event) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // ===================================================================
+                // Verify inputs
+                // ===================================================================
                 const input = (0, class_transformer_1.plainToClass)(AddressInput_1.ProfileInput, event.body);
                 const error = yield (0, errors_1.AppValidationError)(input);
                 if (error)
@@ -145,11 +205,13 @@ let UserService = class UserService {
                 const payload = yield (0, password_1.verifyToken)(token);
                 if (!payload)
                     return (0, response_1.ErrorResponse)(404, "Authorization failed");
-                const Salt = yield (0, password_1.GetSalt)();
-                const hashedPassword = yield (0, password_1.GetHashedPassword)(input.password, Salt.toString());
-                input.password = hashedPassword;
-                // DB Operation
-                const result = yield this.repository.CreateProfile(payload.user_id, input);
+                // // CHECK PROFILE
+                // const getProfile = await this.repository.GetProfile(payload.user_id);
+                // if (getProfile) return ErrorResponse(404, "profile already exists");
+                // ===================================================================
+                // DB OPERATION: Create profile
+                // ===================================================================
+                const result = yield this.repository.CreateProfile(payload.user_id, input, input.address);
                 return (0, response_1.SusccessResponse)(result);
             }
             catch (error) {
@@ -157,14 +219,20 @@ let UserService = class UserService {
             }
         });
     }
+    // ===================================================================
+    // GET PROFILE
+    // Verify Token
+    // DB OPERATION: Get profile
+    // ===================================================================
     GetProfile(event) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // Verify Token
                 const token = event.headers.authorization;
                 const payload = yield (0, password_1.verifyToken)(token);
                 if (!payload)
                     return (0, response_1.ErrorResponse)(404, "Authorization failed");
-                // DB Operation
+                // DB OPERATION: Get profile
                 const result = yield this.repository.GetProfile(payload.user_id);
                 return (0, response_1.SusccessResponse)(result);
             }
@@ -173,16 +241,56 @@ let UserService = class UserService {
             }
         });
     }
+    // ===================================================================
+    // EDIT PROFILE
+    // Verify User, Inputs
+    // DB OPERATION: Find profile
+    // DB OPERATION: Edit profile
+    // ===================================================================
     EditProfile(event) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // Verify User, Inputs
                 const input = (0, class_transformer_1.plainToClass)(AddressInput_1.ProfileInput, event.body);
                 const token = event.headers.authorization;
                 const payload = yield (0, password_1.verifyToken)(token);
                 if (!payload)
                     return (0, response_1.ErrorResponse)(404, "Authorization failed");
-                // DB Operation
-                yield this.repository.EditProfile(payload.user_id, input);
+                // DB OPERATION: Find profile
+                const getProfile = yield this.repository.FindAccountById(payload.user_id);
+                if (!getProfile)
+                    return (0, response_1.ErrorResponse)(404, "profile does not exist.");
+                let userInfo = {};
+                let addresInput = {};
+                input.email
+                    ? (userInfo.email = input.email)
+                    : (userInfo.email = getProfile.email);
+                input.first_name
+                    ? (userInfo.first_name = input.first_name)
+                    : (userInfo.first_name = getProfile.first_name);
+                input.last_name
+                    ? (userInfo.last_name = input.last_name)
+                    : (userInfo.last_name = getProfile.last_name);
+                input.middle_name
+                    ? (userInfo.middle_name = input.middle_name)
+                    : (userInfo.middle_name = getProfile.middle_name);
+                input.phone
+                    ? (userInfo.phone = input.phone)
+                    : (userInfo.phone = getProfile.phone);
+                input.profile_pic
+                    ? (userInfo.profile_pic = input.profile_pic)
+                    : (userInfo.profile_pic = getProfile.profile_pic);
+                input.password
+                    ? (userInfo.password = input.password)
+                    : (userInfo.password = getProfile.password);
+                input.address.addressLine1
+                    ? (addresInput.addressLine1 = input.address.addressLine1)
+                    : (addresInput.addressLine1 = getProfile.address[0].address_line1);
+                input.address.addressLine2
+                    ? (addresInput.addressLine2 = input.address.addressLine2)
+                    : (addresInput.addressLine2 = getProfile.address[0].address_line2);
+                // DB OPERATION: Edit profile
+                yield this.repository.EditProfile(payload.user_id, userInfo, addresInput);
                 return (0, response_1.SusccessResponse)({ message: "Success User profile updated" });
             }
             catch (error) {
@@ -190,17 +298,34 @@ let UserService = class UserService {
             }
         });
     }
-    // PAYMENT TRANSACTION
+    // PAYMENT TRANSACTIONS
+    // ===================================================================
+    // CREATE PAYMENT
+    // ===================================================================
     CreatePayment(event) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, response_1.SusccessResponse)({ message: "response from create payment" });
         });
     }
+    // ===================================================================
+    // COLLECT PAYMENT
+    // ===================================================================
+    CollectPayment(event) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, response_1.SusccessResponse)({ message: "response from create payment" });
+        });
+    }
+    // ===================================================================
+    // GET PAYMENT
+    // ===================================================================
     GetPayment(event) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, response_1.SusccessResponse)({ message: "response from get Cart" });
         });
     }
+    // ===================================================================
+    // EDIT PAYMENT
+    // ===================================================================
     EditPayment(event) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, response_1.SusccessResponse)({ message: "response from edit Cart" });

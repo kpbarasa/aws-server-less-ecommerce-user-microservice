@@ -17,12 +17,16 @@ exports.CartInput = CartInput;
 __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], CartInput.prototype, "qty", void 0);
+], CartInput.prototype, "quantity", void 0);
 class UpdateCartInput {
 }
 exports.UpdateCartInput = UpdateCartInput;
 __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], UpdateCartInput.prototype, "qty", void 0);
+], UpdateCartInput.prototype, "quantity", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", String)
+], UpdateCartInput.prototype, "items", void 0);
 //# sourceMappingURL=cartInput.js.map

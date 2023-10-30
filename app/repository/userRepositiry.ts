@@ -1,28 +1,31 @@
 import { AddressModel } from "app/models/addressModel";
-import { BillingAddressInput, ProfileInput } from "app/models/dto/AddressInput";
+import { AddressInput, ProfileInput } from "app/models/dto/AddressInput";
 import { UserModel } from "../models/UserModel";
 import { DBClient } from "../utility/databaseClient";
 import { DBOperation } from "./dbOperations";
-import { v1 as uuidv1 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { UserInputs } from "app/models/dto/SignupInput";
+import moment from "moment";
 // import * as md5 from 'md5';
 
-
-
 export class UserRepository extends DBOperation {
-
   constructor() {
     super();
   }
 
-  _currentDate = new Date();
-
   async CreateAccount(input: UserInputs) {
-    
-    const user_id = uuidv1();
+    const user_id = uuidv4();
+    const currentDate = moment().format("YYYY-MM-DD hh:mm:ss");
 
-    const queryString =
-      "INSERT INTO users(user_id, phone, email, password, user_type, salt, verification_code, expiry_date, created_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *";
+    const queryString = `INSERT INTO users(
+      user_id, 
+      phone, 
+      email, 
+      password, 
+      user_type, 
+      salt, 
+      verification_code,
+      created_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
 
     const values = [
       user_id,
@@ -32,8 +35,7 @@ export class UserRepository extends DBOperation {
       input.user_type,
       input.salt,
       input.verification_code,
-      this._currentDate.toString(),
-      this._currentDate.toString(),
+      currentDate,
     ];
 
     const result = await this.executeQuery(queryString, values);
@@ -55,8 +57,20 @@ export class UserRepository extends DBOperation {
     return result.rows[0] as UserModel;
   }
 
+  async FindAccountById(id: string) {
+    const queryString = "SELECT * FROM users WHERE user_id = $1";
+    const values = [id];
+    const result = await this.executeQuery(queryString, values);
+
+    if (result.rowCount < 1) {
+      throw new Error("User does not exist with provided user id");
+    }
+
+    return result.rows[0] as UserModel;
+  }
+
   async UpdateVerificationCode(userId: string, code: number, expiry: Date) {
-    const updated_at = new Date();
+    const updated_at = moment().format("YYYY-MM-DD hh:mm:ss");
     const queryString =
       "UPDATE users SET verification_code = $1, expiry_date = $2, updated_at = $3 WHERE user_id = $4 AND verified = FALSE RETURNING *";
     const values = [code, expiry, updated_at, userId];
@@ -69,7 +83,7 @@ export class UserRepository extends DBOperation {
   }
 
   async UpdateVerifyUser(userId: string) {
-    const updated_at = new Date();
+    const updated_at = moment().format("YYYY-MM-DD hh:mm:ss");
     const queryString =
       "UPDATE users SET verified = TRUE WHERE user_id = $1 AND verified = FALSE";
     const values = [userId];
@@ -88,7 +102,7 @@ export class UserRepository extends DBOperation {
     salt: string,
     phone: string
   ) {
-    const updated_at = new Date();
+    const updated_at = moment().format("YYYY-MM-DD hh:mm:ss");
     const client = await DBClient();
 
     await client.connect();
@@ -106,6 +120,8 @@ export class UserRepository extends DBOperation {
   }
 
   async UpdateUser(user_id: string, input: UserInputs) {
+    const updated_at = moment().format("YYYY-MM-DD hh:mm:ss");
+
     const queryString =
       "UPDATE users SET phone=$1, email=$2, password=$3, first_name=$4, last_name=$5, middle_name=$6, profile_pic=$7, updated_at=$8 WHERE user_id = $9 RETURNING *";
 
@@ -117,7 +133,7 @@ export class UserRepository extends DBOperation {
       input.last_name,
       input.middle_name,
       input.profile_pic,
-      this._currentDate.toString(),
+      updated_at,
       user_id,
     ];
 
@@ -132,18 +148,10 @@ export class UserRepository extends DBOperation {
 
   async CreateProfile(
     userId: string,
-    {
-      phone,
-      email,
-      password,
-      first_name,
-      last_name,
-      middle_name,
-      profile_pic,
-      address: { addressLine1, addressLine2, city, state, post_code, country },
-    }: ProfileInput
+    profileInput: ProfileInput,
+    address: AddressInput
   ) {
-    const resposne = {
+    const {
       phone,
       email,
       password,
@@ -151,10 +159,14 @@ export class UserRepository extends DBOperation {
       last_name,
       middle_name,
       profile_pic,
-      address: {},
-      billing_address: {},
-      shipping_address: {},
-    };
+    } = profileInput;
+
+    const { addressLine1, addressLine2, city, state, post_code, country } =
+      address;
+
+    const address_id = uuidv4();
+
+    const currentDate = moment().format("YYYY-MM-DD hh:mm:ss");
 
     // UPDATE USER INFORMATION
     await this.UpdateUser(userId, {
@@ -168,10 +180,19 @@ export class UserRepository extends DBOperation {
     });
 
     // USER ADDRESS INFORMATION
-    const addQueryString =
-      "INSERT INTO address(user_id, address_line1, address_line2, city, state, post_code, country) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *";
+    const addQueryString = `INSERT INTO address(
+      address_id,
+      user_id,
+      address_line1,
+      address_line2,
+      city,
+      state,
+      post_code,
+      country,
+      created_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`;
 
     const values = [
+      address_id,
       userId,
       addressLine1,
       addressLine2,
@@ -179,6 +200,7 @@ export class UserRepository extends DBOperation {
       state,
       post_code,
       country,
+      currentDate,
     ];
 
     const addressRes = await this.executeQuery(addQueryString, values);
@@ -192,7 +214,7 @@ export class UserRepository extends DBOperation {
 
   async GetProfile(userId: string) {
     const profileQueryString =
-      "SELECT first_name, last_name, email, phone, user_type, verified FROM users where user_id = $1";
+      "SELECT first_name, last_name, email, phone, user_type, stripe_id, payment_id, verified FROM users where user_id = $1";
     const profileValues = [userId];
 
     const profileResult = await this.executeQuery(
@@ -207,7 +229,7 @@ export class UserRepository extends DBOperation {
     const userProfile = profileResult.rows[0] as UserModel;
 
     const addressQuery =
-      "SELECT id, address_line1, address_line2, city, post_code, country FROM address WHERE user_id = $1";
+      "SELECT address_id, address_line1, address_line2, city, post_code, country FROM address WHERE user_id = $1";
     const addressValues = [userId];
 
     const addressResult = await this.executeQuery(addressQuery, addressValues);
@@ -223,7 +245,10 @@ export class UserRepository extends DBOperation {
 
   async EditProfile(
     userId: string,
-    {
+    profileInput: UserModel,
+    address: AddressInput
+  ) {
+    const {
       phone,
       email,
       password,
@@ -231,9 +256,11 @@ export class UserRepository extends DBOperation {
       last_name,
       middle_name,
       profile_pic,
-      address: { addressLine1, addressLine2, city, post_code, country, id },
-    }: ProfileInput
-  ) {
+    } = profileInput;
+
+    const { addressLine1, addressLine2, city, state, post_code, country } =
+      address;
+
     await this.UpdateUser(userId, {
       phone,
       email,
@@ -245,8 +272,15 @@ export class UserRepository extends DBOperation {
     });
 
     const queryString =
-      "UPDATE address SET address_line1 =$1, address_line2 =$2, city =$3, post_code =$4, country =$5  WHERE id = $6";
-    const values = [addressLine1, addressLine2, city, post_code, country, id];
+      "UPDATE address SET address_line1 =$1, address_line2 =$2, city =$3, post_code =$4, country =$5  WHERE user_id = $6";
+    const values = [
+      addressLine1,
+      addressLine2,
+      city,
+      post_code,
+      country,
+      userId,
+    ];
 
     const result = await this.executeQuery(queryString, values);
 
@@ -273,4 +307,18 @@ export class UserRepository extends DBOperation {
     }
   }
 
+  async updateUserPayment(
+    userId: string,
+    paymentId: string,
+    customerId: string
+  ) {
+    const queryString =
+      "UPDATE users SET stripe_id=$1, payment_id=$2 WHERE user_id=$3 RETURNING *";
+    const values = [customerId, paymentId, userId];
+    const result = await this.executeQuery(queryString, values);
+    if (result.rowCount > 0) {
+      return result.rows[0] as UserModel;
+    }
+    return false
+  }
 }

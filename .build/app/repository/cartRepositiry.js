@@ -10,139 +10,191 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CartRepository = void 0;
+const uuid_1 = require("uuid");
 const dbOperations_1 = require("./dbOperations");
+const response_1 = require("../utility/response");
 class CartRepository extends dbOperations_1.DBOperation {
     constructor() {
         super();
+        this._currentDate = new Date();
+    }
+    createShoppingCart(user_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const cart_id = (0, uuid_1.v1)();
+            const queryString = "INSERT  INTO shopping_carts(user_id, cart_id,items, subtotal, total, total_tax, tax_class, taxes) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
+            const values = [
+                user_id,
+                cart_id,
+                0,
+                0,
+                0,
+                0,
+                JSON.stringify([]),
+                JSON.stringify([]), //taxes
+            ];
+            const result = yield this.executeQuery(queryString, values);
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not create shopping cart");
+        });
+    }
+    updateShoppingCart(input) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { subtotal, total, total_tax, cart_id } = input;
+            const queryString = "UPDATE shopping_carts SET subtotal=$1, total=$2, total_tax=$3 WHERE cart_id=$4 RETURNING *";
+            const values = [subtotal, total, total_tax, cart_id];
+            const result = yield this.executeQuery(queryString, values);
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not update shopping cart data");
+        });
+    }
+    findShoppingCartById(user_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const queryString = "SELECT cart_id, user_id, items, tax_class, subtotal, total, total_tax, taxes, created_at FROM shopping_carts WHERE user_id=$1";
+            const values = [user_id];
+            const result = yield this.executeQuery(queryString, values);
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not find shopping cart");
+        });
     }
     findShoppingCart(user_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const queryString = "SELECT cart_id, user_id FROM shopping_carts WHERE user_id=$1";
+            const queryString = "SELECT cart_id, user_id, items, tax_class, subtotal, total, total_tax, taxes, created_at FROM shopping_carts WHERE user_id=$1";
             const values = [user_id];
             const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows[0] : false;
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not find shopping cart data");
         });
     }
-    ;
-    createShoppingCart(user_id) {
+    findCartItem(cartId, productId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const queryString = "INSERT  INTO shopping_carts(user_id) VALUES($1) RETURNING *";
-            const values = [user_id];
+            const queryString = "SELECT item_id, product_id, price, quantity, image_url, variation_id, subtotal, tax_class, taxes, total_tax, total, meta_data, sku, created_at FROM cart_items WHERE product_id=$1 AND cart_id=$2";
+            const values = [productId, cartId];
             const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows[0] : false;
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not get shopping cart item");
         });
     }
-    ;
-    updateShoppingCart({ cart_id, subtotal, total }) {
+    findCartItems(cartId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const queryString = 'UPDATE shopping_carts SET subtotal=$1  total=$2 WHERE cart_id=$3';
-            const values = [subtotal, total, cart_id];
+            const queryString = "SELECT item_id, product_id, price, quantity, image_url, variation_id, subtotal, tax_class, taxes, total_tax, total, meta_data, sku, created_at FROM cart_items WHERE  cart_id=$1";
+            const values = [cartId];
             const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows[0] : false;
+            if (result.rowCount > 0) {
+                return result.rows;
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not get shopping cart items");
         });
     }
-    ;
-    findCartItemById(productId) {
-        return __awaiter(this, void 0, void 0, function* () { });
-    }
-    ;
-    findCartItemByProductId(productId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log({ productId });
-            const queryString = "SELECT product_id, price, item_qty FROM cart_items WHERE product_id=$1";
-            // const queryString = "SELECT * FROM cart_items WHERE product_id != $1";
-            const values = [productId];
-            const result = yield this.executeQuery(queryString, values);
-            console.log({ result: result });
-            return result.rowCount > 0 ? result.rows[0] : false;
-        });
-    }
-    ;
-    findCartItems(user_id) {
+    getShoppingcart(user_id) {
         return __awaiter(this, void 0, void 0, function* () {
             const queryString = `SELECT 
-        ci.cart_id, 
         ci.item_id, 
+        ci.cart_id, 
         ci.product_id, 
         ci.name, 
         ci.price, 
-        ci.item_qty, 
+        ci.quantity, 
         ci.image_url,
-        ci.created_at FROM cart_items sc INNER JOIN shopping_carts ci ON sc.cart_id = ci.cart_id WHERE sc.user_id = $1`;
+        ci.created_at 
+        FROM cart_items ci INNER JOIN shopping_carts sc ON ci.cart_id = sc.cart_id WHERE sc.user_id = $1`;
             const values = [user_id];
             const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows : false;
+            console.log({ result: result.rows[0] });
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not get shopping car");
         });
     }
-    ;
-    findCartItemsByCartId(cartId) {
+    createCartItem(inputs) {
         return __awaiter(this, void 0, void 0, function* () {
-            const queryString = "SELECT name, image_url, price, item_qty FROM cart_items WHERE cart_id=$1";
+            const { data, cart_id, quantity, subtotal, total_tax, total } = inputs;
+            const item_id = (0, uuid_1.v1)();
+            const vitem_id = (0, uuid_1.v1)();
+            const queryString = `INSERT  INTO cart_items(item_id, cart_id, product_id, name, price, image_url, variation_id, quantity, tax_class, subtotal,total_tax,taxes, total, sku) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`;
+            const values = [
+                item_id,
+                cart_id,
+                data.product_id,
+                data.name,
+                data.price,
+                data.images,
+                vitem_id,
+                quantity,
+                JSON.stringify([""]),
+                subtotal,
+                total_tax,
+                JSON.stringify([""]),
+                total,
+                "00", //SKU
+            ];
+            const result = yield this.executeQuery(queryString, values);
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not get shopping car");
+        });
+    }
+    updateCartItemById(itemId, inputs) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { quantity, subtotal, total_tax, total, item_id } = inputs;
+            const queryString = "UPDATE cart_items SET quantity=$1, subtotal=$2, total_tax=$3, total=$4 WHERE item_id=$5";
+            const values = [quantity, subtotal, total_tax, total, item_id];
+            const result = yield this.executeQuery(queryString, values);
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not get shopping car");
+        });
+    }
+    updateCartItemByProductId(inputs) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { quantity, subtotal, total_tax, total, productId } = inputs;
+            const queryString = "UPDATE cart_items SET quantity=$1,  subtotal=$2, total_tax=$3, total=$4  WHERE product_id=$5 RETURNING *";
+            const values = [quantity, subtotal, total_tax, total, productId];
+            const result = yield this.executeQuery(queryString, values);
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+            throw (0, response_1.ErrorResponse)(404, "Sorry could not get shopping car");
+        });
+    }
+    deleteCartItem(cartId, productId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log({ productId, cartId });
+            const queryString = "DELETE FROM cart_items WHERE cart_id=$1 AND product_id=$2";
+            const values = [cartId, productId];
+            const result = yield this.executeQuery(queryString, values);
+            return result.rowCount > 0
+                ? result.rows[0]
+                : false;
+        });
+    }
+    deleteCart(cartId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const queryString = "DELETE FROM shopping_carts WHERE cart_id = $1";
             const values = [cartId];
             const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows : [];
-        });
-    }
-    ;
-    createCartItem({ product_id, name, price, images, cart_id, item_qty }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log("CART ITEMS HERE");
-            console.log({
-                product_id,
-                name,
-                price,
-                images,
-                cart_id,
-                item_qty
-            });
-            const queryString = "INSERT  INTO cart_items(cart_id, product_id, name, image_url, price, item_qty) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
-            const values = [cart_id, product_id, name, images, price, item_qty];
-            const result = yield this.executeQuery(queryString, values);
-            console.log({ result: result.rows[0] });
-            return result.rowCount > 0 ? result.rows[0] : false;
-        });
-    }
-    ;
-    updateCartItemById(itemId, qty) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const queryString = 'UPDATE cart_items SET item_qty=$1 WHERE item_id=$2';
-            const values = [itemId, qty];
-            const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows[0] : false;
-        });
-    }
-    ;
-    updateCartItemByProductId(productId, qty) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const queryString = 'UPDATE cart_items SET item_qty=$1 WHERE item_id=$2';
-            const values = [qty, productId];
-            const result = yield this.executeQuery(queryString, values);
-            console.log({ result: result.rows });
-            return result.rowCount > 0 ? result.rows[0] : false;
-        });
-    }
-    ;
-    deleteCartItem(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const queryString = 'DELETE FROM cart_items WHERE item_id = $1';
-            const values = [id];
-            const result = yield this.executeQuery(queryString, values);
-            return result.rowCount > 0 ? result.rows[0] : false;
-        });
-    }
-    ;
-    deleteCart(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const queryString = 'DELETE FROM cart_items WHERE cart_id = $1';
-            const values = [id];
-            const result = yield this.executeQuery(queryString, values);
             if (result) {
-                yield this.executeQuery('DELETE FROM cart_items WHERE cart_id = $1', [id]);
+                yield this.executeQuery("DELETE FROM cart_items WHERE cart_id = $1", [
+                    cartId,
+                ]);
             }
-            return result.rowCount > 0 ? result.rows[0] : false;
+            return result.rowCount > 0
+                ? result.rows[0]
+                : false;
         });
     }
-    ;
 }
 exports.CartRepository = CartRepository;
 //# sourceMappingURL=cartRepositiry.js.map

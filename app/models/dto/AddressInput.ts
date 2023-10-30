@@ -1,7 +1,7 @@
 import {Length} from "class-validator";
 
 export class AddressInput {
-    id?: number;
+    address_id?: string;
 
     @Length(3, 32)
     addressLine1: string;
@@ -21,7 +21,7 @@ export class AddressInput {
 }
 
 export class BillingAddressInput {
-    id?: number;
+    address_id?: string;
 
     @Length(3, 32)
     addressLine1: string;
@@ -42,7 +42,7 @@ export class BillingAddressInput {
 }
 
 export class ShippingAddressInput {
-    id?: number;
+    address_id?: string;
 
     @Length(3, 32)
     addressLine1: string;
@@ -79,8 +79,8 @@ export class ProfileInput {
     @Length(8, 50) 
     email: string;
 
-    @Length(8, 16) 
-    password: string;
+    // @Length(8, 16) 
+    password?: string;
 
     profile_pic: string;
 

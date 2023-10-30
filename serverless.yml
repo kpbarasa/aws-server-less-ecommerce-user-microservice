@@ -1,30 +1,31 @@
 service: users-microservice
 frameworkVersion: '3'
 
+useDotenv: true 
+
 provider:
   name: aws
   runtime: nodejs16.x
   versionFunctions: false
   stage: "dev"
-  region: eu-central-1
+  region: us-east-1
   httpApi:
     cors: true
+  # SNS Topic
   environment:
-    SNS_TOPIC: {Ref: CustomerTopic}
-    # SNS PERMISIONS
+    SNS_TOPIC: { Ref: CustomerTopic }
   iamRoleStatements:
-    - Effect: 'Allow'
+    - Effect: "Allow"
       Action:
-        -  'sns:publish'
+        - "sns:Publish"
       Resource:
-        -  !Ref CustomerTopic
+        - !Ref CustomerTopic
 
 custom:
   stage: "dev"
   serverless-offline:
     httpPort: 4000
     lambdaPort: 4002
-
 
 functions:
   signup:
@@ -33,14 +34,12 @@ functions:
       - httpApi:
           path: /signup
           method: post
-
   login:
     handler: app/handler.Login
     events:
       - httpApi:
           path: /login
           method: post
-
   verify:
     handler: app/handler.Verify
     events:
@@ -50,7 +49,6 @@ functions:
       - httpApi:
           path: /verify
           method: post
-
   profile:
     handler: app/handler.Profile
     events:
@@ -63,10 +61,9 @@ functions:
       - httpApi:
           path: /user
           method: get
-
   cart:
     handler: app/handler.Cart
-    timeout: 15
+    timeout: 20
     events:
       - httpApi:
           path: /cart
@@ -78,15 +75,35 @@ functions:
           path: /cart
           method: get
       - httpApi:
-          path: /cart/{id}
+          path: /cart
+          method: delete
+      - httpApi:
+          path: /cart/item/{id}
           method: delete
 
-  orders:
+  collect-payment:
     handler: app/handler.CollectPayment
+    events:
+      - httpApi:
+          path: /collect-payment
+          method: post
+
+  place-order:
+    handler: app/handler.PlaceOrder
     events:
       - httpApi:
           path: /order
           method: post
+  
+  sellerProgram:
+    handler: app/handler.SellerProgram
+    events:
+      - httpApi:
+        path: /join
+        method: post
+      - httpApi:
+        path: /join
+        method: put
 
   payment:
     handler: app/handler.Payment
@@ -95,7 +112,7 @@ functions:
           path: /payment
           method: post
       - httpApi:
-          path: /payment
+          path: /payment/{id}
           method: put
       - httpApi:
           path: /payment
@@ -104,19 +121,22 @@ functions:
 plugins:
   - serverless-offline
   - serverless-plugin-typescript
+  - serverless-plugin-optimize
 
-resource:
-    Resource:
-        CustomerTopic:
-            Type: AWS::SNS::Topic
-            Properties:
-                DisplayName: "Customer snsn Topic Description"
-                TopicName: 
+# package:
+#   individually: true
 
-    #OUTPUT FOR LATER USAGE
-    Outputs:
-        CustomerTopicInfo:
-            Description: customer-topic
-            Value: !Ref CustomerTopic
-            Export:
-                Name: customer-topic
+resources:
+  Resources:
+    CustomerTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: "customer sns topic description"
+        TopicName: CustomerTopic
+
+  Outputs:
+    CustomerTopicInfo:
+      Description: customer-topic
+      Value: !Ref CustomerTopic
+      Export:
+        Name: customer-topic

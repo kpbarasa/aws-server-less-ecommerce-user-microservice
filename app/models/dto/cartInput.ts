@@ -1,24 +1,35 @@
 import { IsNumber, Length } from "class-validator";
 
 export class CartInput {
-    @IsNumber()
-    qty: number;
+  @IsNumber()
+  quantity: number;
+  productId: string;
 
-    // @Length(6, 24)
-    productId: number;
-    cart_id?: string;
-    item_id?: string;
-    name: string;
-    images: string[];
-    price: number;
-    item_qty: number;variation_id: number;
-    tax_class: string; 
-    subtotal: string; 
-    subtotal_tax: string;
-    total: string;
+  cart_id?: string;
+  user_id: string;
+  tax_class: string;
+  taxes: string[];
+
+  // @IsNumber()
+  // items?: number;
+
+  total_tax: number;
+  subtotal: number;
+  total: number;
 }
 
 export class UpdateCartInput {
-    @IsNumber()
-    qty: number;
+  @IsNumber()
+  quantity: number;
+  productId: string;
+
+  cart_id?: string;
+  user_id: string;
+  tax_class: string;
+  taxes: string;
+  @IsNumber()
+  items?: string;
+  total_tax: number;
+  subtotal: number;
+  total: number;
 }

@@ -103,8 +103,4 @@ __decorate([
     (0, class_validator_1.Length)(8, 50),
     __metadata("design:type", String)
 ], ProfileInput.prototype, "email", void 0);
-__decorate([
-    (0, class_validator_1.Length)(8, 16),
-    __metadata("design:type", String)
-], ProfileInput.prototype, "password", void 0);
 //# sourceMappingURL=AddressInput.js.map
